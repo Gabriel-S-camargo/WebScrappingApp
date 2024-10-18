@@ -51,6 +51,7 @@ android {
 
 dependencies {
 
+    implementation("it.skrape:skrapeit:1.2.2")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
