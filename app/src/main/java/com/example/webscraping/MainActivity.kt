@@ -3,16 +3,15 @@ package com.example.webscraping
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.webscraping.ui.theme.WebScrapingTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -50,19 +49,63 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             WebScrapingTheme {
-                PrintCotacao()
-                PrintDividendosHist()
+                MainContent() // Encapsula todos os conteúdos
             }
         }
     }
 }
 
 @Composable
+fun MainContent() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()) // Permite rolagem vertical
+            .padding(16.dp), // Espaçamento geral
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        start()
+        Spacer(modifier = Modifier.height(16.dp)) // Espaço entre seções
+        PrintCotacao()
+        Spacer(modifier = Modifier.height(16.dp)) // Espaço entre seções
+        PrintDividendosHist()
+    }
+}
+
+@Composable
+fun start() {
+    Column(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth()
+        ) {
+            Text("Segue Cotação e dividendos da MULT3")
+            Spacer(modifier = Modifier.width(8.dp)) // Espaçamento horizontal
+        }
+        Row(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth()
+        ) {
+            Text("Fonte: Investidor 10")
+            Spacer(modifier = Modifier.width(8.dp)) // Espaçamento horizontal
+        }
+
+    }
+}
+
+@Composable
 fun PrintCotacao() {
-    // Estado inicial como "Carregando..."
     var value by remember { mutableStateOf("Carregando...") }
 
-    // LaunchedEffect para fazer o scraping ao iniciar a composição
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             val call = RetrofitInstance.api.getHtml()
@@ -70,11 +113,9 @@ fun PrintCotacao() {
                 override fun onResponse(call: Call<String>, response: Response<String>) {
                     if (response.isSuccessful) {
                         response.body()?.let { html ->
-                            // Usando Jsoup para analisar o HTML
                             val document = Jsoup.parse(html)
-                            // Seletor atualizado para pegar o valor dentro do span.value
                             val cotacaoValue = document.select("div._card.cotacao div._card-body span.value").text()
-                            value = cotacaoValue  // Atualiza o valor
+                            value = cotacaoValue
                         }
                     } else {
                         value = "Falha ao obter a cotação"
@@ -88,10 +129,9 @@ fun PrintCotacao() {
         }
     }
 
-    // Exibição do valor recuperado
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -102,10 +142,8 @@ fun PrintCotacao() {
 
 @Composable
 fun PrintDividendosHist() {
-    // Estado inicial como uma lista vazia
-    var dividendos by remember { mutableStateOf(listOf<Pair<String, String>>()) } // Armazenar Tipo e Valor
+    var dividendos by remember { mutableStateOf(listOf<List<String>>()) }
 
-    // LaunchedEffect para fazer o scraping ao iniciar a composição
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             val call = RetrofitInstance.api.getHtml()
@@ -115,54 +153,66 @@ fun PrintDividendosHist() {
                         response.body()?.let { html ->
                             val document = Jsoup.parse(html)
 
-                            // Seletor para pegar a tabela
                             val dividendosTable = document.select("div#dividends-section div.content.no_datatable.indicator-history table#table-dividends-history")
-
-                            // Pegar as linhas da tabela
                             val rows = dividendosTable.select("tbody tr")
-                            val dividendosList = mutableListOf<Pair<String, String>>() // Lista para armazenar os dividendos
+                            val dividendosList = mutableListOf<List<String>>()
 
-                            // Iterar sobre as linhas
                             for (row in rows) {
-                                val columns = row.select("td") // Pegar as colunas da linha
-                                if (columns.size >= 4) { // Verifica se a linha tem pelo menos 4 colunas
-                                    val tipo = columns[0].text() // Tipo
-                                    val dataCom = columns[1].text() // Data com
-                                    val pagamento = columns[2].text() // Pagamento
-                                    val valor = columns[3].text() // Valor
+                                val columns = row.select("td")
+                                if (columns.size >= 4) {
+                                    val tipo = columns[0].text()
+                                    val dataCom = columns[1].text()
+                                    val pagamento = columns[2].text()
+                                    val valor = columns[3].text()
 
-                                    // Adicionar os dados à lista
-                                    dividendosList.add(Pair(tipo, valor))
+                                    dividendosList.add(listOf(tipo, dataCom, pagamento, valor))
                                 }
                             }
 
-                            dividendos = dividendosList // Atualizar o estado com a lista de dividendos
+                            dividendos = dividendosList
                         }
                     } else {
-                        dividendos = listOf("Falha ao obter a cotação" to "")
+                        dividendos = listOf(listOf("Falha ao obter dividendos", "", "", ""))
                     }
                 }
 
                 override fun onFailure(call: Call<String>, t: Throwable) {
-                    dividendos = listOf("Erro" to t.message.orEmpty())
+                    dividendos = listOf(listOf("Erro ao carregar dados", "", "", ""))
                 }
             })
         }
     }
 
-    // Exibição dos valores recuperados
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Top
     ) {
-        // Exibir cada par de tipo e valor
-        for ((tipo, valor) in dividendos) {
-            Text(text = "Tipo: $tipo, Valor: $valor")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = "Tipo", modifier = Modifier.weight(1f))
+            Text(text = "Data Com", modifier = Modifier.weight(1f))
+            Text(text = "Pagamento", modifier = Modifier.weight(1f))
+            Text(text = "Valor", modifier = Modifier.weight(1f))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        for (dividendo in dividendos) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = dividendo[0], modifier = Modifier.weight(1f), fontSize = 12.sp)
+                Text(text = dividendo[1], modifier = Modifier.weight(1f), fontSize = 12.sp)
+                Text(text = dividendo[2], modifier = Modifier.weight(1f), fontSize = 12.sp)
+                Text(text = dividendo[3], modifier = Modifier.weight(1f), fontSize = 12.sp)
+            }
+            Spacer(modifier = Modifier.height(4.dp))
         }
     }
 }
-
-
