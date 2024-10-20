@@ -44,14 +44,23 @@ android {
     }
     packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes.add("META-INF/*")
+            excludes.add("mozilla/public-suffix-list.txt")
         }
     }
+
+
 }
 
 dependencies {
 
-    implementation("it.skrape:skrapeit:1.2.2")
+    // Lib de exibição de table de um indiano
+    implementation(libs.beetablescompose)
+    //
+    implementation(libs.retrofit)
+    implementation(libs.converter.scalars)
+    implementation(libs.jsoup)
+    implementation(libs.skrapeit)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
