@@ -23,18 +23,18 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-// Retrofit Interface
+
 interface WebScrapingApi {
     @GET("/acoes/mult3/")
     fun getHtml(): Call<String>
 }
 
-// Retrofit Instance (Singleton)
+
 object RetrofitInstance {
     private val retrofit by lazy {
         Retrofit.Builder()
             .baseUrl("https://investidor10.com.br/")
-            .addConverterFactory(ScalarsConverterFactory.create()) // Converter HTML para String
+            .addConverterFactory(ScalarsConverterFactory.create())
             .build()
     }
 
@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             WebScrapingTheme {
-                MainContent() // Encapsula todos os conteúdos
+                MainContent()
             }
         }
     }
@@ -60,21 +60,21 @@ fun MainContent() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()) // Permite rolagem vertical
-            .padding(16.dp), // Espaçamento geral
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        start()
-        Spacer(modifier = Modifier.height(16.dp)) // Espaço entre seções
+        Start()
+        Spacer(modifier = Modifier.height(16.dp))
         PrintCotacao()
-        Spacer(modifier = Modifier.height(16.dp)) // Espaço entre seções
+        Spacer(modifier = Modifier.height(16.dp))
         PrintDividendosHist()
     }
 }
 
 @Composable
-fun start() {
+fun Start() {
     Column(
         modifier = Modifier
             .padding(8.dp)
@@ -88,7 +88,7 @@ fun start() {
                 .fillMaxWidth()
         ) {
             Text("Segue Cotação e dividendos da MULT3")
-            Spacer(modifier = Modifier.width(8.dp)) // Espaçamento horizontal
+            Spacer(modifier = Modifier.width(8.dp))
         }
         Row(
             modifier = Modifier
@@ -96,7 +96,7 @@ fun start() {
                 .fillMaxWidth()
         ) {
             Text("Fonte: Investidor 10")
-            Spacer(modifier = Modifier.width(8.dp)) // Espaçamento horizontal
+            Spacer(modifier = Modifier.width(8.dp)) 
         }
 
     }
